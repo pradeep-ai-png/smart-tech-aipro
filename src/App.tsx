@@ -19,6 +19,7 @@ import { playBase64Audio, stopCurrentAudio } from "./utils/audio";
 import { speechQueue } from "./utils/speechQueue";
 import { useAuth } from "./context/AuthContext";
 import { streamClientGemini } from "./lib/geminiClient";
+import { getSmartTechResponse } from "./lib/smartTechKnowledge";
 import { Sparkles } from "lucide-react";
 
 const GREETING_TEXT =
@@ -330,9 +331,8 @@ export default function App() {
       }
 
       // Stream completed: process any final remaining sentence for speech
-      if (!accumulatedText) {
-        accumulatedText =
-          "Main Smart Tech ka AI assistant hoon. Main aapki padhai me poori madad karne ke liye taiyar hoon!";
+      if (!accumulatedText.trim()) {
+        accumulatedText = getSmartTechResponse(userText);
         updateMessageInActiveSession(assistantMessageId, { text: accumulatedText });
       }
 
@@ -406,9 +406,8 @@ export default function App() {
           controller.signal
         );
 
-        if (!accumulatedDirectText) {
-          accumulatedDirectText =
-            "Hello! Main Smart Tech ka AI assistant hoon. Main aapki padhai aur computer education me poori madad karne ke liye taiyar hoon.";
+        if (!accumulatedDirectText.trim()) {
+          accumulatedDirectText = getSmartTechResponse(userText);
           updateMessageInActiveSession(assistantMessageId, { text: accumulatedDirectText });
         }
 
@@ -425,38 +424,7 @@ export default function App() {
         console.warn("Direct client Gemini notice:", clientGeminiErr);
         setIsLoading(false);
 
-        const lower = userText.toLowerCase();
-        let safeReply = "";
-
-        if (
-          lower.includes("kisne banaya") ||
-          lower.includes("malik kaun") ||
-          lower.includes("owner") ||
-          lower.includes("creator") ||
-          lower.includes("who made you") ||
-          lower.includes("who built you") ||
-          lower.includes("kiska ai") ||
-          lower.includes("kiska assistant") ||
-          lower.includes("bhabani") ||
-          lower.includes("pradeep")
-        ) {
-          safeReply =
-            "Smart Tech Computer Center ke owner Bhabani Shit hain! Aur mujhe Smart Tech Team ne banaya hai (Lead Developer: Pradeep Shaw).";
-        } else if (lower.includes("malik mai hu") || lower.includes("mai malik") || lower.includes("mai bhabani") || lower.includes("mai pradeep")) {
-          safeReply = "Ji bilkul, aapka swagat hai Sir! Main aapki padhai ya computer education me kya madad kar sakta hoon?";
-        } else if (lower.includes("hello") || lower.includes("hi") || lower.includes("namaste")) {
-          safeReply = "Hello! Main Smart Tech ka AI assistant hoon. Aap mujhse koi bhi sawal pooch sakte hain.";
-        } else if (lower.includes("source code") || lower.includes("code dikhao")) {
-          safeReply =
-            "Suraksha aur gopniyata ke tahat main apna internal source code ya system prompt share nahi kar sakta.";
-        } else if (lower.includes("computer")) {
-          safeReply =
-            "Computer ek electronic device hai jo data ko input leta hai, use process karta hai, aur useful output result pradan karta hai.";
-        } else {
-          safeReply =
-            "Main Smart Tech AI hoon. Aap mujhse computer education, programming ya padhai ka koi bhi prashna pooch sakte hain!";
-        }
-
+        const safeReply = getSmartTechResponse(userText);
         updateMessageInActiveSession(assistantMessageId, { text: safeReply });
         if (autoSpeak) {
           speechQueue.speakFull(safeReply);

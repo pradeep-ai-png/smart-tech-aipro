@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { getSmartTechResponse } from "./smartTechKnowledge";
 
 export const SYSTEM_INSTRUCTION = `You are the official AI assistant of "Smart Tech Computer Center" (Smart Tech Computer Education).
 Your name is "Smart Tech AI Assistant".
@@ -85,41 +86,65 @@ export async function streamClientGemini(
 
   let fullResponse = "";
 
-  try {
-    const stream = await ai.models.generateContentStream({
-      model: "gemini-3.1-flash-lite",
-      contents,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.7,
-      },
-    });
+  const envKey =
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_GEMINI_API_KEY) ||
+    "";
 
-    for await (const chunk of stream) {
-      if (signal?.aborted) {
-        break;
-      }
-      const text = chunk.text || "";
-      if (text) {
-        fullResponse += text;
-        onChunk(text);
-      }
-    }
-  } catch (err: any) {
-    console.warn("Client Gemini stream fallback notice, trying gemini-3.8-flash:", err);
+  if (envKey) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+      const stream = await ai.models.generateContentStream({
+        model: "gemini-3.1-flash-lite",
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
           temperature: 0.7,
         },
       });
-      fullResponse = response.text || "";
-      onChunk(fullResponse);
-    } catch (fallbackErr: any) {
-      console.error("Client fallback error:", fallbackErr);
+
+      for await (const chunk of stream) {
+        if (signal?.aborted) {
+          break;
+        }
+        const text = chunk.text || "";
+        if (text) {
+          fullResponse += text;
+          onChunk(text);
+        }
+      }
+    } catch (err: any) {
+      console.warn("Client Gemini stream fallback notice, trying gemini-3.8-flash:", err);
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            temperature: 0.7,
+          },
+        });
+        fullResponse = response.text || "";
+        onChunk(fullResponse);
+      } catch (fallbackErr: any) {
+        console.error("Client fallback error:", fallbackErr);
+      }
+    }
+  }
+
+  // If Gemini failed or no API key is provided on static hosting (e.g. GitHub Pages),
+  // stream the comprehensive Smart Tech Knowledge response word-by-word
+  if (!fullResponse.trim()) {
+    const knowledgeText = getSmartTechResponse(cleanMsg);
+    const words = knowledgeText.split(" ");
+
+    for (let i = 0; i < words.length; i++) {
+      if (signal?.aborted) {
+        break;
+      }
+      const chunk = (i === 0 ? "" : " ") + words[i];
+      fullResponse += chunk;
+      onChunk(chunk);
+      // Realistic streaming typing delay (12ms)
+      await new Promise((resolve) => setTimeout(resolve, 12));
     }
   }
 
