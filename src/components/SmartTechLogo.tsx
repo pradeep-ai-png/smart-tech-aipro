@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import smartTechLogoImg from "../assets/smart_tech_logo.png";
 
 interface SmartTechLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -15,7 +16,22 @@ export const SmartTechLogo: React.FC<SmartTechLogoProps> = ({
   isThinking = false,
   className = "",
 }) => {
+  // Try imported asset first, then fallback to public base path, then svg
+  const [imgSrc, setImgSrc] = useState<string>(smartTechLogoImg);
   const [imgError, setImgError] = useState(false);
+
+  const handleImageError = () => {
+    if (imgSrc === smartTechLogoImg) {
+      // Try BASE_URL public file
+      const publicBase = import.meta.env.BASE_URL || "/";
+      const fallbackUrl = `${publicBase.endsWith("/") ? publicBase : publicBase + "/"}smart_tech_logo.png`;
+      setImgSrc(fallbackUrl);
+    } else if (imgSrc !== "/smart_tech_logo.png") {
+      setImgSrc("/smart_tech_logo.png");
+    } else {
+      setImgError(true);
+    }
+  };
 
   const sizeClasses = {
     sm: "w-10 h-10",
@@ -59,11 +75,11 @@ export const SmartTechLogo: React.FC<SmartTechLogoProps> = ({
       >
         {!imgError ? (
           <img
-            src="/smart_tech_logo.png"
+            src={imgSrc}
             alt="Smart Tech Computer Education Logo"
             className="w-full h-full object-cover select-none"
             referrerPolicy="no-referrer"
-            onError={() => setImgError(true)}
+            onError={handleImageError}
           />
         ) : (
           /* High-Fidelity SVG Fallback with the ST Monogram and Gold/Blue ring */
