@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@keyframes thinking-slide {
+  0% {
+    left: -35%;
+    width: 35%;
+  }
+  50% {
+    left: 20%;
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 35%;
+  }
+}
+
+@keyframes thinking-glow {
+  0%, 100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-thinking-bar {
+  animation: thinking-slide 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+             thinking-glow 1.5s ease-in-out infinite;
+}

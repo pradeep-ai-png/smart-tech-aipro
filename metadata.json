@@ -1,0 +1,7 @@
+{
+  "name": "Smart Tech AI Assistant",
+  "description": "Smart Tech Computer Center official AI assistant by Smart Tech Team, owned by Bhabani Shit, developed by Pradeep Shaw.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
